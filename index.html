@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Guruch Bozori</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root { --green:#2D7A4F; --green-light:#3DA066; --green-pale:#E8F5EE; --gold:#F0A500; --bg:#F4F7F5; --white:#FFFFFF; --text:#1A2E22; --muted:#7A9485; --border:#D8EAE0; }
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family:'Nunito',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; padding-bottom:80px; }
+  .header { background:var(--green); padding:16px 20px 20px; position:sticky; top:0; z-index:50; box-shadow:0 2px 12px rgba(45,122,79,0.3); }
+  .header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .logo { display:flex; align-items:center; gap:8px; }
+  .logo-icon { font-size:26px; }
+  .logo-text { font-size:18px; font-weight:800; color:var(--white); line-height:1.1; }
+  .logo-sub { font-size:10px; font-weight:500; color:rgba(255,255,255,0.6); letter-spacing:0.08em; text-transform:uppercase; }
+  .add-btn { background:var(--gold); border:none; cursor:pointer; padding:8px 16px; border-radius:20px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; color:var(--text); display:flex; align-items:center; gap:6px; transition:transform 0.15s; }
+  .add-btn:active { transform:scale(0.95); }
+  .add-btn.locked { background:rgba(255,255,255,0.2); color:rgba(255,255,255,0.5); cursor:not-allowed; }
+  .search-bar { position:relative; }
+  .search-input { width:100%; padding:10px 16px 10px 40px; border-radius:12px; border:none; background:rgba(255,255,255,0.15); color:var(--white); font-family:'Nunito',sans-serif; font-size:14px; outline:none; }
+  .search-input::placeholder { color:rgba(255,255,255,0.5); }
+  .search-icon { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:16px; opacity:0.6; }
+  .stats-bar { display:flex; gap:8px; padding:12px 20px; overflow-x:auto; scrollbar-width:none; }
+  .stats-bar::-webkit-scrollbar { display:none; }
+  .stat-chip { background:var(--white); border:1px solid var(--border); border-radius:10px; padding:8px 14px; white-space:nowrap; display:flex; align-items:center; gap:6px; }
+  .stat-chip-num { font-size:16px; font-weight:800; color:var(--green); }
+  .stat-chip-label { font-size:11px; color:var(--muted); font-weight:600; }
+  .filter-row { padding:0 20px 12px; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none; }
+  .filter-row::-webkit-scrollbar { display:none; }
+  .filter-tab { padding:6px 14px; border-radius:20px; border:1.5px solid var(--border); background:var(--white); font-family:'Nunito',sans-serif; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer; white-space:nowrap; transition:all 0.2s; }
+  .filter-tab.active { background:var(--green); border-color:var(--green); color:var(--white); }
+  .no-perm-banner { margin:12px 16px; padding:14px 16px; background:#FFF8E1; border:1.5px solid #FFD54F; border-radius:14px; display:flex; align-items:flex-start; gap:12px; }
+  .products-list { padding:0 16px; display:flex; flex-direction:column; gap:12px; }
+  .product-card { background:var(--white); border-radius:16px; overflow:hidden; box-shadow:0 2px 8px rgba(0,0,0,0.06); border:1px solid var(--border); animation:slideIn 0.3s ease; }
+  @keyframes slideIn { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  .card-image { width:100%; height:190px; object-fit:cover; display:block; }
+  .card-image-placeholder { width:100%; height:130px; background:linear-gradient(135deg,var(--green-pale),#c8e6d4); display:flex; align-items:center; justify-content:center; font-size:52px; }
+  .card-header { background:var(--green-pale); padding:12px 16px; display:flex; justify-content:space-between; align-items:center; }
+  .rice-name { font-size:17px; font-weight:800; color:var(--green); }
+  .price-badge { background:var(--gold); color:var(--text); font-size:13px; font-weight:800; padding:4px 10px; border-radius:8px; }
+  .card-body { padding:12px 16px; }
+  .info-row { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+  .info-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+  .info-label { color:var(--muted); font-weight:600; min-width:76px; font-size:13px; }
+  .info-value { color:var(--text); font-weight:700; font-size:14px; }
+  .map-link { color:var(--green); text-decoration:none; font-weight:700; font-size:14px; }
+  .card-footer { border-top:1px solid var(--border); padding:10px 16px; display:flex; justify-content:space-between; align-items:center; }
+  .seller-info { display:flex; align-items:center; gap:8px; }
+  .seller-avatar { width:32px; height:32px; background:var(--green); border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; font-size:14px; font-weight:800; }
+  .seller-name { font-size:13px; font-weight:700; }
+  .seller-role { font-size:11px; color:var(--muted); }
+  .call-btn { background:var(--green-pale); border:1.5px solid var(--green); color:var(--green); padding:7px 14px; border-radius:10px; font-family:'Nunito',sans-serif; font-size:13px; font-weight:700; cursor:pointer; display:flex; align-items:center; gap:5px; text-decoration:none; transition:all 0.15s; }
+  .call-btn:active { background:var(--green); color:white; }
+  .delete-btn { background:#FFEBEE; border:1.5px solid #EF9A9A; color:#C62828; padding:5px 10px; border-radius:8px; font-family:'Nunito',sans-serif; font-size:12px; font-weight:700; cursor:pointer; margin-left:8px; }
+  .empty-state { text-align:center; padding:60px 20px; color:var(--muted); }
+  .empty-icon { font-size:56px; margin-bottom:16px; }
+  .empty-title { font-size:18px; font-weight:700; margin-bottom:8px; }
+  .loading { text-align:center; padding:40px; color:var(--muted); }
+  .loading-spin { font-size:40px; animation:spin 1s linear infinite; display:inline-block; margin-bottom:12px; }
+  @keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+  .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.55); z-index:100; align-items:flex-end; }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--white); border-radius:24px 24px 0 0; width:100%; max-height:92vh; overflow-y:auto; padding:24px 20px 40px; animation:slideUp 0.3s ease; }
+  @keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+  .modal-handle { width:40px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
+  .modal-title { font-size:20px; font-weight:800; color:var(--text); margin-bottom:20px; }
+  .image-upload-area { width:100%; height:160px; border:2px dashed var(--border); border-radius:14px; display:flex; flex-direction:column; align-items:center; justify-content:center; cursor:pointer; margin-bottom:16px; position:relative; overflow:hidden; background:var(--bg); }
+  .image-upload-area.has-image { border-style:solid; border-color:var(--green); }
+  .upload-preview { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; }
+  .upload-icon { font-size:34px; margin-bottom:6px; }
+  .upload-text { font-size:13px; font-weight:700; color:var(--muted); }
+  .upload-sub { font-size:11px; color:var(--muted); opacity:0.7; margin-top:3px; }
+  #imageInput { display:none; }
+  .form-group { margin-bottom:16px; }
+  .form-label { display:block; font-size:11px; font-weight:700; letter-spacing:0.07em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .form-input { width:100%; padding:12px 14px; border:1.5px solid var(--border); border-radius:12px; font-family:'Nunito',sans-serif; font-size:15px; color:var(--text); outline:none; background:var(--bg); transition:border-color 0.2s; }
+  .form-input:focus { border-color:var(--green); }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .submit-btn { width:100%; padding:14px; background:var(--green); color:white; border:none; cursor:pointer; border-radius:14px; font-family:'Nunito',sans-serif; font-size:16px; font-weight:800; margin-top:8px; transition:opacity 0.2s; }
+  .submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .cancel-btn { width:100%; padding:12px; background:transparent; color:var(--muted); border:none; cursor:pointer; border-radius:14px; font-family:'Nunito',sans-serif; font-size:15px; font-weight:600; margin-top:4px; }
+  .toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:white; padding:10px 20px; border-radius:20px; font-size:14px; font-weight:600; opacity:0; transition:all 0.3s; white-space:nowrap; z-index:200; pointer-events:none; }
+  .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  .section-label { padding:4px 20px 8px; font-size:12px; font-weight:700; color:var(--muted); letter-spacing:0.08em; text-transform:uppercase; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <span class="logo-icon">🌾</span>
+      <div>
+        <div class="logo-text">Guruch Bozori</div>
+        <div class="logo-sub">Xorazm viloyati</div>
+      </div>
+    </div>
+    <button class="add-btn" id="addBtn" onclick="tryOpenModal()">➕ E'lon berish</button>
+  </div>
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input class="search-input" id="searchInput" placeholder="Guruch navi bo'yicha qidirish..." oninput="filterProducts()">
+  </div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-chip"><span class="stat-chip-num" id="totalCount">0</span><span class="stat-chip-label">Mahsulot</span></div>
+  <div class="stat-chip"><span class="stat-chip-num" id="totalTon">0</span><span class="stat-chip-label">Tonna jami</span></div>
+  <div class="stat-chip"><span class="stat-chip-num" id="minPrice">—</span><span class="stat-chip-label">Min narx/kg</span></div>
+</div>
+
+<div class="filter-row" id="filterRow">
+  <button class="filter-tab active" onclick="setFilter('all',this)">Hammasi</button>
+</div>
+
+<div id="noPerm" style="display:none">
+  <div class="no-perm-banner">
+    <span style="font-size:24px;flex-shrink:0">🔒</span>
+    <div>
+      <div style="font-size:14px;font-weight:800;color:#E65100;margin-bottom:3px">E'lon berish uchun ruxsat kerak</div>
+      <div style="font-size:12px;color:#BF360C;line-height:1.5">Admin tomonidan ruxsat berilgan foydalanuvchilar e'lon qo'sha oladi.</div>
+    </div>
+  </div>
+</div>
+
+<div class="section-label" id="sectionLabel">Barcha mahsulotlar</div>
+<div class="products-list" id="productsList">
+  <div class="loading">
+    <div class="loading-spin">⏳</div>
+    <div>Yuklanmoqda...</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🌾 Yangi e'lon qo'shish</div>
+    <div class="image-upload-area" id="imageUploadArea" onclick="document.getElementById('imageInput').click()">
+      <span class="upload-icon">📸</span>
+      <span class="upload-text">Guruch rasmini yuklang</span>
+      <span class="upload-sub">Kamera yoki galereya</span>
+    </div>
+    <input type="file" id="imageInput" accept="image/*" onchange="handleImage(event)">
+    <div class="form-group">
+      <label class="form-label">Guruch navi *</label>
+      <input class="form-input" id="f_name" placeholder="Masalan: Laser, Dev-zira, Basmati">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Miqdori (tonna) *</label>
+        <input class="form-input" id="f_amount" type="number" placeholder="3">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Narxi (so'm/kg) *</label>
+        <input class="form-input" id="f_price" type="number" placeholder="9500">
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Manzil *</label>
+      <input class="form-input" id="f_address" placeholder="Gurlan tumani, Eshimjiron qishlog'i">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Google Maps havolasi</label>
+      <input class="form-input" id="f_maplink" placeholder="https://maps.google.com/...">
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Sotuvchi ismi *</label>
+        <input class="form-input" id="f_seller" placeholder="Abdulla">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Telefon *</label>
+        <input class="form-input" id="f_phone" type="tel" placeholder="+998901234567">
+      </div>
+    </div>
+    <button class="submit-btn" id="submitBtn" onclick="addProduct()">✅ E'lonni chiqarish</button>
+    <button class="cancel-btn" onclick="closeModal()">Bekor qilish</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const GITHUB_TOKEN = "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";
+  const GITHUB_OWNER = "amirbekataxanov-commits";
+  const GITHUB_REPO  = "Guruch-savdo";
+  const GITHUB_FILE  = "products.json";
+  const GITHUB_API   = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`;
+  const ALLOWED_USERS = [837423714];
+
+  const tg = window.Telegram?.WebApp;
+  if (tg) { tg.ready(); tg.expand(); }
+  const currentUserId = tg?.initDataUnsafe?.user?.id || null;
+  const isAllowed = currentUserId ? ALLOWED_USERS.includes(currentUserId) : false;
+
+  if (currentUserId && !isAllowed) {
+    document.getElementById('addBtn').classList.add('locked');
+    document.getElementById('addBtn').innerHTML = "🔒 E'lon berish";
+  }
+
+  let products = [];
+  let currentFilter = 'all';
+  let selectedImage = null;
+  let fileSha = null;
+
+  async function loadProducts() {
+    try {
+      const res = await fetch(GITHUB_API + '?t=' + Date.now(), {
+        headers: { 'Authorization': 'token ' + GITHUB_TOKEN }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        fileSha = data.sha;
+        const content = decodeURIComponent(escape(atob(data.content.replace(/\n/g, ''))));
+        products = JSON.parse(content) || [];
+      }
+    } catch(e) { products = []; }
+    updateFilters();
+    filterProducts();
+  }
+
+  async function saveProducts() {
+    const json = JSON.stringify(products, null, 2);
+    const content = btoa(unescape(encodeURIComponent(json)));
+    const res = await fetch(GITHUB_API, {
+      method: 'PUT',
+      headers: { 'Authorization': 'token ' + GITHUB_TOKEN, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: "E'lon yangilandi", content, sha: fileSha })
+    });
+    if (!res.ok) throw new Error('Saqlashda xato');
+    const data = await res.json();
+    fileSha = data.content.sha;
+  }
+
+  function handleImage(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 600;
+        let w = img.width, h = img.height;
+        if (w > MAX) { h = h*MAX/w; w = MAX; }
+        if (h > MAX) { w = w*MAX/h; h = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+        selectedImage = canvas.toDataURL('image/jpeg', 0.6);
+        const area = document.getElementById('imageUploadArea');
+        area.classList.add('has-image');
+        area.innerHTML = `<img src="${selectedImage}" class="upload-preview">`;
+        area.onclick = () => document.getElementById('imageInput').click();
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function renderProducts(list) {
+    const c = document.getElementById('productsList');
+    if (!list.length) {
+      c.innerHTML = `<div class="empty-state"><div class="empty-icon">🌾</div><div class="empty-title">Mahsulot topilmadi</div><p style="font-size:14px">Hali e'lon qo'shilmagan</p></div>`;
+      return;
+    }
+    c.innerHTML = list.map(p => `
+      <div class="product-card">
+        ${p.image ? `<img class="card-image" src="${p.image}" alt="${p.name}" loading="lazy">` : `<div class="card-image-placeholder">🌾</div>`}
+        <div class="card-header">
+          <div class="rice-name">🌾 ${p.name}</div>
+          <div class="price-badge">${Number(p.price).toLocaleString()} so'm/kg</div>
+        </div>
+        <div class="card-body">
+          <div class="info-row"><span class="info-icon">⚖️</span><span class="info-label">Miqdori:</span><span class="info-value">${p.amount} tonna</span></div>
+          <div class="info-row"><span class="info-icon">📍</span><span class="info-label">Manzil:</span><span class="info-value">${p.mapLink ? `<a class="map-link" href="${p.mapLink}" target="_blank">🗺️ ${p.address}</a>` : p.address}</span></div>
+        </div>
+        <div class="card-footer">
+          <div class="seller-info">
+            <div class="seller-avatar">${p.seller.charAt(0)}</div>
+            <div><div class="seller-name">${p.seller}</div><div class="seller-role">Sotuvchi</div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:6px">
+            <a class="call-btn" href="tel:${p.phone}">📞 ${p.phone}</a>
+            ${isAllowed ? `<button class="delete-btn" onclick="deleteProduct('${p.id}')">🗑️</button>` : ''}
+          </div>
+        </div>
+      </div>`).join('');
+  }
+
+  function updateStats(list) {
+    document.getElementById('totalCount').textContent = list.length;
+    const ton = list.reduce((s,p)=>s+Number(p.amount),0);
+    document.getElementById('totalTon').textContent = ton%1===0 ? ton : ton.toFixed(1);
+    const prices = list.map(p=>Number(p.price));
+    document.getElementById('minPrice').textContent = prices.length ? Math.min(...prices).toLocaleString() : '—';
+  }
+
+  function updateFilters() {
+    const names = [...new Set(products.map(p=>p.name))];
+    const row = document.getElementById('filterRow');
+    row.innerHTML = `<button class="filter-tab ${currentFilter==='all'?'active':''}" onclick="setFilter('all',this)">Hammasi</button>`;
+    names.forEach(n => {
+      const b = document.createElement('button');
+      b.className = `filter-tab ${currentFilter===n?'active':''}`;
+      b.textContent = n; b.onclick = function(){ setFilter(n,this); };
+      row.appendChild(b);
+    });
+  }
+
+  function setFilter(val, btn) {
+    currentFilter = val;
+    document.querySelectorAll('.filter-tab').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('sectionLabel').textContent = val==='all' ? 'Barcha mahsulotlar' : `"${val}" navi`;
+    filterProducts();
+  }
+
+  function filterProducts() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    let list = currentFilter==='all' ? products : products.filter(p=>p.name===currentFilter);
+    if (q) list = list.filter(p=>p.name.toLowerCase().includes(q)||p.seller.toLowerCase().includes(q)||p.address.toLowerCase().includes(q));
+    renderProducts(list);
+    updateStats(list);
+  }
+
+  async function deleteProduct(id) {
+    if (!isAllowed) return;
+    if (!confirm("Bu e'lonni o'chirasizmi?")) return;
+    showToast("⏳ O'chirilmoqda...");
+    products = products.filter(p=>p.id!==id);
+    try {
+      await saveProducts();
+      updateFilters(); filterProducts();
+      showToast("🗑️ E'lon o'chirildi!");
+    } catch(e) { showToast('❌ Xato: '+e.message); }
+  }
+
+  function tryOpenModal() {
+    if (!isAllowed) {
+      document.getElementById('noPerm').style.display='block';
+      showToast("🔒 Sizda e'lon berish ruxsati yo'q");
+      return;
+    }
+    openModal();
+  }
+
+  function openModal() { document.getElementById('modalOverlay').classList.add('open'); document.body.style.overflow='hidden'; }
+  function closeModal() { document.getElementById('modalOverlay').classList.remove('open'); document.body.style.overflow=''; }
+  function closeModalOutside(e) { if(e.target===document.getElementById('modalOverlay')) closeModal(); }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent=msg; t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2800);
+  }
+
+  async function addProduct() {
+    if (!isAllowed) { showToast("🔒 Ruxsat yo'q"); return; }
+    const name=document.getElementById('f_name').value.trim();
+    const amount=document.getElementById('f_amount').value;
+    const price=document.getElementById('f_price').value;
+    const address=document.getElementById('f_address').value.trim();
+    const mapLink=document.getElementById('f_maplink').value.trim();
+    const seller=document.getElementById('f_seller').value.trim();
+    const phone=document.getElementById('f_phone').value.trim();
+    if (!name||!amount||!price||!address||!seller||!phone) { showToast("⚠️ Barcha * maydonlarni to'ldiring"); return; }
+
+    const btn = document.getElementById('submitBtn');
+    btn.disabled=true; btn.textContent='⏳ Saqlanmoqda...';
+    showToast('⏳ Saqlanmoqda...');
+
+    products.unshift({ id:Date.now().toString(), name, amount:parseFloat(amount), price:parseInt(price), address, mapLink, seller, phone, image:selectedImage, date:new Date().toISOString() });
+
+    try {
+      await saveProducts();
+      ['f_name','f_amount','f_price','f_address','f_maplink','f_seller','f_phone'].forEach(id=>document.getElementById(id).value='');
+      selectedImage=null;
+      const area=document.getElementById('imageUploadArea');
+      area.classList.remove('has-image');
+      area.innerHTML=`<span class="upload-icon">📸</span><span class="upload-text">Guruch rasmini yuklang</span><span class="upload-sub">Kamera yoki galereya</span>`;
+      area.onclick=()=>document.getElementById('imageInput').click();
+      closeModal(); updateFilters(); filterProducts();
+      showToast("✅ E'lon muvaffaqiyatli qo'shildi!");
+      if(tg) tg.sendData(JSON.stringify({action:'new_product',name,amount,price,address,seller,phone}));
+    } catch(e) {
+      products.shift();
+      showToast('❌ Xato: '+e.message);
+    }
+    btn.disabled=false; btn.textContent="✅ E'lonni chiqarish";
+  }
+
+  loadProducts();
+</script>
+</body>
+</html>
